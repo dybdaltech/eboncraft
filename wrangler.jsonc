@@ -1,0 +1,17 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "eboncraft",
+  "main": ".open-next/worker.js",
+  "compatibility_date": "2026-10-01",
+  "compatibility_flags": ["nodejs_compat", "global_fetch_strictly_public"],
+  "assets": {
+    "directory": ".open-next/assets",
+    "binding": "ASSETS"
+  },
+  "observability": { "enabled": true },
+  // Public values. Secrets (SUPABASE_SERVICE_ROLE_KEY, GITHUB_TOKEN, VIRUSTOTAL_API_KEY)
+  // are set with `npx wrangler secret put <NAME>`.
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://eboncraft.dev"
+  }
+}
