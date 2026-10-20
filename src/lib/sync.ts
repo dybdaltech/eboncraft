@@ -99,7 +99,7 @@ export async function fetchRepoSnapshot(owner: string, repoName: string): Promis
 }
 
 /** Scans a new download, or checks on a scan that was still running at the last sync. */
-async function scanIfNeeded(current: Partial<Addon>, next: RepoSnapshot) {
+export async function scanIfNeeded(current: Partial<Addon>, next: RepoSnapshot) {
   if (!isVirusTotalEnabled() || !next.download_url) return {};
   const downloadChanged = current.download_url !== next.download_url;
   if (!downloadChanged && current.vt_status === "pending" && current.vt_sha256) {

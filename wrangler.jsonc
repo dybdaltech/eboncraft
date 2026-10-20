@@ -8,11 +8,8 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
-  "observability": { "enabled": true },
-  // Public values. Secrets (SUPABASE_SERVICE_ROLE_KEY, GITHUB_TOKEN, VIRUSTOTAL_API_KEY)
-  // are set with `npx wrangler secret put <NAME>`.
-  "vars": {
-    "NEXT_PUBLIC_SITE_URL": "https://eboncraft.app",
+  "observability": {
+    "enabled": true,
     "head_sampling_rate": 1,
     "redact_query_string": false,
     "logs": {
@@ -20,14 +17,20 @@
       "head_sampling_rate": 1,
       "invocation_logs": true,
       "persist": true
-    },    
+    },
     "traces": {
       "enabled": true,
       "head_sampling_rate": 1,
       "persist": true
     },
-    "issue_detection": {
+    "issues": {
       "enabled": true
     }
+  },
+  // Runtime values for the Worker. Secrets (SUPABASE_SERVICE_ROLE_KEY, GITHUB_TOKEN, VIRUSTOTAL_API_KEY)
+  // are set with `npx wrangler secret put <NAME>`. NEXT_PUBLIC_* values are baked in at build time,
+  // so they also need to be build variables in Cloudflare Workers Builds.
+  "vars": {
+    "NEXT_PUBLIC_SITE_URL": "https://eboncraft.app"
   }
 }

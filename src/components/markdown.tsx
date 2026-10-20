@@ -2,12 +2,14 @@ import ReactMarkdown, { defaultUrlTransform } from "react-markdown";
 import rehypeRaw from "rehype-raw";
 import rehypeSanitize from "rehype-sanitize";
 import remarkGfm from "remark-gfm";
+import { cn } from "@/lib/utils";
 
 type Props = {
   source: string;
   /** "owner/repo", used to resolve relative links and images in the README. */
   repo: string;
   branch: string;
+  className?: string;
 };
 
 function resolveUrl(url: string, key: string, repo: string, branch: string): string {
@@ -20,9 +22,9 @@ function resolveUrl(url: string, key: string, repo: string, branch: string): str
 }
 
 /** Renders a GitHub README: GFM, sanitized inline HTML, and repo-relative links/images. */
-export function Markdown({ source, repo, branch }: Props) {
+export function Markdown({ source, repo, branch, className }: Props) {
   return (
-    <div className="markdown">
+    <div className={cn("markdown", className)}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw, rehypeSanitize]}

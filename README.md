@@ -23,6 +23,17 @@ A developer-first World of Warcraft addon directory. Developers sign in with Git
 - **Who can list a repo:** its owner, or a *public* member of the organization that owns it.
 - **Security model:** the public anon key can only read. All writes go through server actions that check ownership and then use the service role key, so nobody can fake a release or a "Clean" badge.
 
+## Try it locally without Supabase (demo mode)
+
+With no Supabase variables set, the site runs in demo mode: browsing shows sample addons, and the dashboard lets you add any public GitHub repo without signing in. Those repos are really fetched from GitHub (README, release, `.toc` files) and kept in memory until you restart the dev server.
+
+```bash
+npm install
+npm run dev        # then open http://localhost:3000
+```
+
+Optional: put `GITHUB_TOKEN` (and `VIRUSTOTAL_API_KEY` to try scanning) in `.env.local`. Without a token GitHub allows 60 API requests an hour, and each added repo uses about four.
+
 ## Setup
 
 1. **Supabase**: create a project, then run `supabase/migrations/0001_addons.sql` in the SQL editor (or `supabase db push`).
@@ -52,6 +63,8 @@ npx wrangler secret put VIRUSTOTAL_API_KEY
 # NEXT_PUBLIC_* values are inlined at build time, so have them in .env.local (or the CI env) when you run:
 npm run deploy
 ```
+
+**Deploy from Linux or macOS, not Windows.** OpenNext's Cloudflare build is not fully compatible with Windows: it builds and deploys, but the Worker can then fail at runtime with "Worker threw exception". On Windows, deploy from WSL with a fresh `npm install` inside WSL (the Windows `node_modules` has Windows-only binaries).
 
 `npm run preview` runs the production Worker locally (put the secrets in `.dev.vars`). Session refresh runs in `src/proxy.ts`, which OpenNext supports on Cloudflare but still labels experimental.
 

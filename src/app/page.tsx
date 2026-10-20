@@ -3,10 +3,10 @@ import { Github } from "@/components/github-icon";
 import Link from "next/link";
 import { signInWithGitHub } from "@/app/auth/actions";
 import { AddonCard } from "@/components/addon-card";
-import { SetupNotice } from "@/components/setup-notice";
+import { DemoBanner } from "@/components/demo-banner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { isSupabaseConfigured } from "@/lib/env";
+import { demoSearch, isDemoMode } from "@/lib/demo";
 import { createClient } from "@/lib/supabase/server";
 import { FLAVOR_LABELS, FLAVOR_ORDER } from "@/lib/toc";
 import { ADDON_CARD_COLUMNS, CATEGORIES, type AddonCard as AddonCardData, type Flavor } from "@/lib/types";
@@ -49,7 +49,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
   const sort: Sort = params.sort && params.sort in SORTS ? (params.sort as Sort) : "updated";
   const current = { q: q || undefined, flavor, category, sort: sort === "updated" ? undefined : sort };
 
-  const result = isSupabaseConfigured ? await loadAddons(q, flavor, category, sort) : null;
+  const result = isDemoMode ? { addons: demoSearch(q, flavor, category, sort), error: undefined } : await loadAddons(q, flavor, category, sort);
 
   return (
     <>
@@ -65,7 +65,7 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
         <div className="mt-8 flex flex-wrap gap-3">
           <form action={signInWithGitHub}>
             <input type="hidden" name="next" value="/dashboard" />
-            <Button size="lg" disabled={!isSupabaseConfigured}>
+            <Button size="lg" disabled={isDemoMode}>
               <Github /> List your addon
             </Button>
           </form>
@@ -119,9 +119,8 @@ export default async function HomePage({ searchParams }: { searchParams: SearchP
           ))}
         </div>
 
-        {!result ? (
-          <SetupNotice />
-        ) : result.error ? (
+        {isDemoMode && <DemoBanner />}
+        {result.error ? (
           <p className="mt-10 text-sm text-destructive">Couldn&apos;t load addons: {result.error}</p>
         ) : result.addons.length === 0 ? (
           <div className="mt-10 rounded-xl border border-dashed p-12 text-center text-muted-foreground">

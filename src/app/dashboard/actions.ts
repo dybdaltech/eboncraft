@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
+import { demoAdd, demoDelete, demoResync, demoUpdate, isDemoMode } from "@/lib/demo";
 import { canListRepo, GitHubError } from "@/lib/github";
 import { createAdminClient, getCurrentUser, githubLogin } from "@/lib/supabase/server";
 import { fetchRepoSnapshot, readmeImages, syncAddon } from "@/lib/sync";
@@ -49,7 +50,21 @@ async function requireOwnedAddon(id: string) {
   return { admin, addon };
 }
 
+async function addDemoAddon(formData: FormData): Promise<ActionState> {
+  const parsed = parseRepoInput(String(formData.get("repo") ?? ""));
+  if (!parsed) return { error: "Enter a repository as username/repo or a GitHub URL." };
+  try {
+    const name = await demoAdd(parsed.owner, parsed.repo, readCategories(formData), readImages(formData));
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return { ok: `${name} was synced from GitHub (demo mode, kept in memory until you restart).` };
+  } catch (error) {
+    return { error: error instanceof Error ? error.message : "Could not reach GitHub." };
+  }
+}
+
 export async function addAddon(_prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (isDemoMode) return addDemoAddon(formData);
   const user = await getCurrentUser();
   const login = githubLogin(user);
   if (!user || !login) return { error: "Sign in with GitHub first." };
@@ -106,6 +121,11 @@ export async function addAddon(_prev: ActionState, formData: FormData): Promise<
 }
 
 export async function resyncAddon(id: string) {
+  if (isDemoMode) {
+    await demoResync(id);
+    revalidatePath("/dashboard");
+    return;
+  }
   const { admin, addon } = await requireOwnedAddon(id);
   await syncAddon(admin, addon);
   revalidatePath("/dashboard");
@@ -113,6 +133,11 @@ export async function resyncAddon(id: string) {
 }
 
 export async function updateAddon(id: string, _prev: ActionState, formData: FormData): Promise<ActionState> {
+  if (isDemoMode) {
+    demoUpdate(id, readCategories(formData), readImages(formData));
+    revalidatePath("/dashboard");
+    return { ok: "Saved." };
+  }
   const { admin, addon } = await requireOwnedAddon(id);
   const { error } = await admin
     .from("addons")
@@ -125,6 +150,12 @@ export async function updateAddon(id: string, _prev: ActionState, formData: Form
 }
 
 export async function deleteAddon(id: string) {
+  if (isDemoMode) {
+    demoDelete(id);
+    revalidatePath("/");
+    revalidatePath("/dashboard");
+    return;
+  }
   const { admin, addon } = await requireOwnedAddon(id);
   await admin.from("addons").delete().eq("id", addon.id);
   revalidatePath("/");
