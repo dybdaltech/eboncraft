@@ -64,6 +64,8 @@ npx wrangler secret put VIRUSTOTAL_API_KEY
 npm run deploy
 ```
 
+**Deploy from Linux or macOS, not Windows.** OpenNext's Cloudflare build is not fully compatible with Windows: it builds and deploys, but the Worker can then fail at runtime with "Worker threw exception". On Windows, deploy from WSL with a fresh `npm install` inside WSL (the Windows `node_modules` has Windows-only binaries).
+
 `npm run preview` runs the production Worker locally (put the secrets in `.dev.vars`). Session refresh runs in `src/proxy.ts`, which OpenNext supports on Cloudflare but still labels experimental.
 
 ## Scripts

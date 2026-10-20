@@ -12,6 +12,6 @@
   // Public values. Secrets (SUPABASE_SERVICE_ROLE_KEY, GITHUB_TOKEN, VIRUSTOTAL_API_KEY)
   // are set with `npx wrangler secret put <NAME>`.
   "vars": {
-    "NEXT_PUBLIC_SITE_URL": "https://eboncraft.dev"
+    "NEXT_PUBLIC_SITE_URL": "https://eboncraft.app"
   }
 }
