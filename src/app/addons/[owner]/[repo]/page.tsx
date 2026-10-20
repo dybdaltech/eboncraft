@@ -9,7 +9,8 @@ import { Markdown } from "@/components/markdown";
 import { ScanBadge } from "@/components/scan-badge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { isSupabaseConfigured, serverEnv } from "@/lib/env";
+import { demoAddonBySlug, isDemoMode } from "@/lib/demo";
+import { serverEnv } from "@/lib/env";
 import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { isStale, syncAddon } from "@/lib/sync";
 import { flavorForInterface, FLAVOR_LABELS, formatInterface } from "@/lib/toc";
@@ -19,7 +20,7 @@ import { formatBytes, timeAgo } from "@/lib/utils";
 type Params = Promise<{ owner: string; repo: string }>;
 
 const loadAddon = cache(async (owner: string, repo: string) => {
-  if (!isSupabaseConfigured) return null;
+  if (isDemoMode) return demoAddonBySlug(`${owner}/${repo}`);
   const supabase = await createClient();
   const { data } = await supabase.from("addons").select("*").eq("slug", `${owner}/${repo}`.toLowerCase()).maybeSingle();
   return data as Addon | null;
@@ -42,7 +43,7 @@ export default async function AddonPage({ params }: { params: Params }) {
   if (!addon) notFound();
 
   // Refresh from GitHub after the response is sent, so the next visitor sees the latest release.
-  if (isStale(addon) && serverEnv("SUPABASE_SERVICE_ROLE_KEY")) {
+  if (!isDemoMode && isStale(addon) && serverEnv("SUPABASE_SERVICE_ROLE_KEY")) {
     after(() => syncAddon(createAdminClient(), addon));
   }
 
@@ -133,8 +134,8 @@ export default async function AddonPage({ params }: { params: Params }) {
               <h2 className="mb-3 font-semibold">
                 What&apos;s new{addon.release_name && addon.release_name !== addon.latest_version ? `: ${addon.release_name}` : ""}
               </h2>
-              <div className="max-h-96 overflow-y-auto rounded-lg border bg-card p-3 text-xs [&_.markdown]:prose-sm">
-                <Markdown source={addon.release_notes} repo={addon.repo_full_name} branch={addon.default_branch} />
+              <div className="max-h-96 overflow-y-auto rounded-lg border bg-card p-3">
+                <Markdown source={addon.release_notes} repo={addon.repo_full_name} branch={addon.default_branch} className="prose-sm" />
               </div>
               <a
                 href={`${githubUrl}/releases`}

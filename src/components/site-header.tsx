@@ -3,11 +3,11 @@ import { Github } from "@/components/github-icon";
 import Link from "next/link";
 import { signInWithGitHub, signOut } from "@/app/auth/actions";
 import { Button } from "@/components/ui/button";
-import { isSupabaseConfigured } from "@/lib/env";
+import { isDemoMode } from "@/lib/demo";
 import { getCurrentUser, githubLogin } from "@/lib/supabase/server";
 
 export async function SiteHeader() {
-  const user = isSupabaseConfigured ? await getCurrentUser() : null;
+  const user = isDemoMode ? null : await getCurrentUser();
   const login = githubLogin(user);
   const avatar = user?.user_metadata?.avatar_url as string | undefined;
 
@@ -24,14 +24,16 @@ export async function SiteHeader() {
           <Link href="/" className="hover:text-foreground">
             Browse
           </Link>
-          {user && (
+          {(user || isDemoMode) && (
             <Link href="/dashboard" className="hover:text-foreground">
               Dashboard
             </Link>
           )}
         </nav>
         <div className="ml-auto flex items-center gap-2">
-          {user ? (
+          {isDemoMode ? (
+            <span className="rounded-full border border-warning/30 bg-warning/10 px-3 py-1 text-xs text-warning">Demo mode</span>
+          ) : user ? (
             <>
               {/* eslint-disable-next-line @next/next/no-img-element */}
               {avatar && <img src={avatar} alt="" className="size-7 rounded-full border" />}
@@ -45,7 +47,7 @@ export async function SiteHeader() {
           ) : (
             <form action={signInWithGitHub}>
               <input type="hidden" name="next" value="/dashboard" />
-              <Button size="sm" variant="outline" disabled={!isSupabaseConfigured}>
+              <Button size="sm" variant="outline">
                 <Github />
                 <span className="hidden sm:inline">Sign in with GitHub</span>
                 <span className="sm:hidden">Sign in</span>

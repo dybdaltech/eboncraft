@@ -5,10 +5,9 @@ import Link from "next/link";
 import { signInWithGitHub } from "@/app/auth/actions";
 import { FlavorBadges } from "@/components/flavor-badges";
 import { ScanBadge } from "@/components/scan-badge";
-import { SetupNotice } from "@/components/setup-notice";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { isSupabaseConfigured } from "@/lib/env";
+import { demoMyAddons, isDemoMode } from "@/lib/demo";
 import { createClient, getCurrentUser } from "@/lib/supabase/server";
 import type { Addon } from "@/lib/types";
 import { timeAgo } from "@/lib/utils";
@@ -24,10 +23,9 @@ type Row = Pick<
 >;
 
 export default async function DashboardPage() {
-  if (!isSupabaseConfigured) return <SetupNotice />;
-  const user = await getCurrentUser();
+  const user = isDemoMode ? null : await getCurrentUser();
 
-  if (!user) {
+  if (!isDemoMode && !user) {
     return (
       <div className="mx-auto mt-20 max-w-md text-center">
         <h1 className="text-2xl font-semibold">Sign in to list your addons</h1>
@@ -42,13 +40,7 @@ export default async function DashboardPage() {
     );
   }
 
-  const supabase = await createClient();
-  const { data } = await supabase
-    .from("addons")
-    .select("id, slug, name, repo_full_name, latest_version, flavors, vt_status, vt_sha256, vt_malicious, vt_suspicious, last_synced_at, sync_error")
-    .eq("owner_id", user.id)
-    .order("created_at", { ascending: false });
-  const addons = (data ?? []) as Row[];
+  const addons: Row[] = isDemoMode ? demoMyAddons() : await loadMyAddons(user!.id);
 
   return (
     <div className="flex flex-col gap-8 pt-10">
@@ -57,6 +49,11 @@ export default async function DashboardPage() {
         <p className="mt-1 text-sm text-muted-foreground">
           Push a GitHub release and Eboncraft picks it up automatically. Use sync to pull it in right away.
         </p>
+        {isDemoMode && (
+          <p className="mt-3 text-sm text-warning">
+            Demo mode: any public repo can be added without signing in, and it&apos;s kept in memory until you restart the dev server.
+          </p>
+        )}
       </div>
 
       <Card>
@@ -103,4 +100,14 @@ export default async function DashboardPage() {
       )}
     </div>
   );
+}
+
+async function loadMyAddons(userId: string): Promise<Row[]> {
+  const supabase = await createClient();
+  const { data } = await supabase
+    .from("addons")
+    .select("id, slug, name, repo_full_name, latest_version, flavors, vt_status, vt_sha256, vt_malicious, vt_suspicious, last_synced_at, sync_error")
+    .eq("owner_id", userId)
+    .order("created_at", { ascending: false });
+  return (data ?? []) as Row[];
 }
