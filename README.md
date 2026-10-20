@@ -47,7 +47,7 @@ Optional: put `GITHUB_TOKEN` (and `VIRUSTOTAL_API_KEY` to try scanning) in `.env
 | Name | Required | Notes |
 | --- | --- | --- |
 | `NEXT_PUBLIC_SUPABASE_URL` | yes | Build-time, public |
-| `NEXT_PUBLIC_SUPABASE_ANON_KEY` | yes | Build-time, public |
+| `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` | yes | Build-time, public. `sb_publishable_...`; the legacy anon key also works, as `NEXT_PUBLIC_SUPABASE_ANON_KEY` |
 | `SUPABASE_SERVICE_ROLE_KEY` | yes | Secret. All writes use it |
 | `NEXT_PUBLIC_SITE_URL` | yes | e.g. `https://eboncraft.dev` |
 | `GITHUB_TOKEN` | recommended | Fine-grained token, public repo read only. Raises the limit from 60 to 5,000 requests/hour |
