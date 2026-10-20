@@ -36,7 +36,7 @@ Optional: put `GITHUB_TOKEN` (and `VIRUSTOTAL_API_KEY` to try scanning) in `.env
 
 ## Setup
 
-1. **Supabase**: create a project, then run `supabase/migrations/0001_addons.sql` in the SQL editor (or `supabase db push`).
+1. **Supabase**: create a project, then run the files in `supabase/migrations` in order in the SQL editor (or `supabase db push`).
 2. **GitHub OAuth app**: on GitHub go to Settings › Developer settings › OAuth Apps › New. Set the callback URL to `https://<your-project>.supabase.co/auth/v1/callback`. Paste the client ID and secret into Supabase › Authentication › Providers › GitHub.
 3. In Supabase › Authentication › URL Configuration, set the Site URL to your domain and add `http://localhost:3000/auth/callback` and `https://eboncraft.dev/auth/callback` to the redirect allow list.
 4. Copy `.env.example` to `.env.local` and fill it in.
