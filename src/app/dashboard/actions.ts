@@ -5,7 +5,7 @@ import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { demoAdd, demoDelete, demoResync, demoUpdate, isDemoMode } from "@/lib/demo";
 import { canListRepo, GitHubError } from "@/lib/github";
-import { createAdminClient, getCurrentUser, githubLogin } from "@/lib/supabase/server";
+import { createAdminClient, getCurrentUser, githubIdentity } from "@/lib/supabase/server";
 import { fetchRepoSnapshot, readmeImages, syncAddon } from "@/lib/sync";
 import { CATEGORIES } from "@/lib/types";
 import { parseRepoInput } from "@/lib/utils";
@@ -66,8 +66,8 @@ async function addDemoAddon(formData: FormData): Promise<ActionState> {
 export async function addAddon(_prev: ActionState, formData: FormData): Promise<ActionState> {
   if (isDemoMode) return addDemoAddon(formData);
   const user = await getCurrentUser();
-  const login = githubLogin(user);
-  if (!user || !login) return { error: "Sign in with GitHub first." };
+  const github = githubIdentity(user);
+  if (!user || !github) return { error: "Sign in with GitHub first." };
 
   const parsed = parseRepoInput(String(formData.get("repo") ?? ""));
   if (!parsed) return { error: "Enter a repository as username/repo or a GitHub URL." };
@@ -81,7 +81,7 @@ export async function addAddon(_prev: ActionState, formData: FormData): Promise<
   if (!fetched) return { error: `${parsed.owner}/${parsed.repo} doesn't exist or is private.` };
 
   const { repo, snapshot } = fetched;
-  if (!(await canListRepo(login, repo))) {
+  if (!(await canListRepo(github.id, repo))) {
     return {
       error: `Only the owner of ${repo.full_name} can list it. For an organization repo, make your membership in ${repo.owner.login} public on GitHub.`,
     };

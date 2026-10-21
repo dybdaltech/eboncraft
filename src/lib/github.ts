@@ -76,7 +76,7 @@ export type GitHubRepo = {
   default_branch: string;
   private: boolean;
   archived: boolean;
-  owner: { login: string; type: "User" | "Organization"; avatar_url: string };
+  owner: { id: number; login: string; type: "User" | "Organization"; avatar_url: string };
 };
 
 export type GitHubRelease = {
@@ -122,12 +122,15 @@ export async function getRawFile(owner: string, repo: string, branch: string, pa
 }
 
 /**
- * Whether `login` may list `repo` on Eboncraft: they own it, or it belongs to an organization they
- * are a public member of.
+ * Whether the GitHub account `userId` may list `repo` on Eboncraft: it owns the repo, or the repo
+ * belongs to an organization it is a public member of. Compares numeric ids, so renamed accounts
+ * can't claim repositories under their old login.
  */
-export async function canListRepo(login: string, repo: GitHubRepo): Promise<boolean> {
-  if (repo.owner.login.toLowerCase() === login.toLowerCase()) return true;
+export async function canListRepo(userId: number, repo: GitHubRepo): Promise<boolean> {
+  if (repo.owner.id === userId) return true;
   if (repo.owner.type !== "Organization") return false;
-  const res = await cachedFetch(`${API}/orgs/${repo.owner.login}/public_members/${login}`, { ttl: 60 });
+  const user = await apiJson<{ login: string }>(`/user/${userId}`, 60);
+  if (!user) return false;
+  const res = await cachedFetch(`${API}/orgs/${repo.owner.login}/public_members/${user.login}`, { ttl: 60 });
   return res.status === 204;
 }

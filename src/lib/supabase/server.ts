@@ -37,9 +37,24 @@ export async function getCurrentUser() {
   return user;
 }
 
-/** The GitHub login Supabase stores on the user after OAuth. */
-export function githubLogin(user: { user_metadata?: Record<string, unknown> } | null): string | null {
-  const meta = user?.user_metadata ?? {};
-  const login = meta.user_name ?? meta.preferred_username;
-  return typeof login === "string" ? login : null;
+type GitHubUser = {
+  identities?: { provider: string; identity_data?: Record<string, unknown> }[];
+  user_metadata?: Record<string, unknown>;
+} | null;
+
+/**
+ * The GitHub account the user signed in with, read from the OAuth identity. Never use
+ * `user_metadata` for this: users can rewrite it with `auth.updateUser()` and the public key.
+ */
+export function githubIdentity(user: GitHubUser): { id: number; login: string | null } | null {
+  const data = user?.identities?.find((i) => i.provider === "github")?.identity_data ?? {};
+  const id = Number(data.provider_id ?? data.sub);
+  if (!Number.isSafeInteger(id) || id <= 0) return null;
+  const login = data.user_name ?? data.preferred_username;
+  return { id, login: typeof login === "string" ? login : null };
+}
+
+/** The GitHub login to show in the header. Display only; authorize with `githubIdentity`. */
+export function githubLogin(user: GitHubUser): string | null {
+  return githubIdentity(user)?.login ?? null;
 }
