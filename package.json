@@ -37,7 +37,7 @@
     "@types/react-dom": "^19",
     "tailwindcss": "^4.3.3",
     "typescript": "^5",
-    "wrangler": "^4.151.2"
+    "wrangler": "^4.156.0"
   },
   "overrides": {
     "@node-minify/core": {
